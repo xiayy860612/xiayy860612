@@ -86,7 +86,7 @@ Linux 为进程设计的两种运行级别，即用户态和内核态，进程�
 来限制**同一时间**只能让**一个线程**执行处理。
 一般通过**悲观锁**对不安全的方法设置临界区，使其同一时间只能被一个线程访问。
 
-```text
+```plantuml
 class SharedResource {
     state
     unsafeMethod() { guarded }
@@ -140,7 +140,7 @@ class SharedResource {
 
 Immutable 的实例被创建后，其状态就不再发生变化。
 
-```text
+```plantuml
 
 class ImmutableSharedResouce {
     field { frozen }
@@ -161,7 +161,7 @@ Mutable 实例用于构建 Immutable 实例，可被修改；
 Immutable 实例则用于共享。
 两者可以根据需求，互相转换。
 
-```text
+```plantuml
 
 class Immutable {
     constructor(Mutable obj) {}

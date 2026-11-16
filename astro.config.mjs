@@ -2,6 +2,8 @@
 
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
+import { satteri } from '@astrojs/markdown-satteri';
+import plantuml from './src/plugins/satteri-plantuml.mjs';
 
 // https://astro.build/config
 //
@@ -18,6 +20,10 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
 	site: 'https://amos.s2u2m.com', // TODO: 替换成你自己的域名
 	integrations: [sitemap()],
+	// 构建时把 ```puml / ```plantuml 代码块渲染成 SVG（需要 Java，见 tools/plantuml-setup.mjs）。
+	markdown: {
+		processor: satteri({ mdastPlugins: [plantuml] }),
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),

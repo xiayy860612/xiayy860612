@@ -80,7 +80,7 @@ to avoid requiring users to login frequently, refresh tokens are given a long ex
 
 ## authorize Workflow with authorization_code
 
-```text
+```plantuml
 
 actor User as U
 actor Client as C

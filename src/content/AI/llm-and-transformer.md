@@ -14,8 +14,17 @@ LLM 是基于 Transformer 通用模型架构进行构建的语言模型。
   - 指令模型
 - 专用模型，针对特定领域，使用**特定数据集**通过迁移学习（transfer learning）训练的模型
 
-```text
-基础模型 --（无监督学习）--> 预训练模型 --（微调）--> 专用模型
+```plantuml
+object "基础模型" as BM {
+    随机初始化权重
+    ---
+}
+object "预训练模型" as PTM
+object "专用模型" as DM
+
+BM --> PTM: 无监督学习
+PTM --> DM: 微调
+
 ```
 
 模型包含以下部分：

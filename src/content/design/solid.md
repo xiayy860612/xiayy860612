@@ -62,7 +62,7 @@ class ShoppingCart {
 1. 对职能进行分离，提取到不同的类中
 2. 通过组合不同职能的类来实现业务逻辑
 
-```text
+```plantuml
 class ShoppingCart
 
 class ShoppingCartPrinter {
@@ -115,7 +115,7 @@ public class AreaCalculator {
 2. 每个形状实现各自的职能接口
 3. 业务逻辑基于职能接口进行实现
 
-```text
+```plantuml
 interface Area {
     Long getArea();
 }
@@ -237,7 +237,7 @@ public class BadPractice {
 
 优化方案：对接口的职能进行拆分
 
-```text
+```plantuml
 interface Shape {
     Integer area();
 }
@@ -290,7 +290,7 @@ public class BadPractice {
 1. 提取抽象接口
 2. 高层模块依赖于抽象接口进行实现
 
-```text
+```plantuml
 interface Database {
     void connect(String host);
 }

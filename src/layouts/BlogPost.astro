@@ -1,15 +1,24 @@
 ---
 import { Image } from 'astro:assets';
+import type { MarkdownHeading } from 'astro';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 import ImageViewer from '../components/ImageViewer.astro';
+import TableOfContents from '../components/TableOfContents.astro';
 
-type Props = CollectionEntry<'blog'>['data'];
+type Props = CollectionEntry<'blog'>['data'] & {
+	/** render() 返回的标题列表；传了就在正文右侧显示悬浮目录 */
+	headings?: MarkdownHeading[];
+	/** 目录收录几级标题，默认 2 级（h2、h3）；h1 是文章标题，不进目录 */
+	tocLevels?: number;
+};
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, headings = [], tocLevels = 2 } =
+	Astro.props;
+const hasToc = headings.some((h) => h.depth >= 2 && h.depth <= 1 + tocLevels);
 ---
 
 <html lang="zh-CN">
@@ -30,11 +39,25 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 				border-radius: 12px;
 				box-shadow: var(--box-shadow);
 			}
-			.prose {
+			.article-layout {
 				/* 正文尽可能占满页面宽度：窄屏跟随页面，超宽屏才被 1600px 兜住。 */
 				width: 1600px;
 				max-width: calc(100% - 2em);
 				margin: auto;
+			}
+			/* 有目录时：左边正文，右边悬浮目录；窄屏目录变成浮层，回到单列。 */
+			.article-layout.has-toc {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 15rem;
+				gap: 1.5rem;
+			}
+			@media (max-width: 1100px) {
+				.article-layout.has-toc {
+					display: block;
+				}
+			}
+			.prose {
+				min-width: 0;
 				padding: 1em;
 				color: rgb(var(--gray-dark));
 			}
@@ -55,6 +78,21 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 				font-style: italic;
 			}
 		</style>
+		<style is:global>
+			/* 构建时渲染出来的 PlantUML 图（见 src/plugins/remark-plantuml.mjs） */
+			.prose figure.plantuml {
+				margin: 1.5em 0;
+				text-align: center;
+				overflow-x: auto;
+			}
+			.prose figure.plantuml img {
+				max-width: 100%;
+				height: auto;
+				margin: 0 auto;
+				border-radius: 0;
+				background: #fff;
+			}
+		</style>
 	</head>
 
 	<body>
@@ -64,6 +102,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 				<div class="hero-image">
 					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
 				</div>
+				<div class:list={['article-layout', { 'has-toc': hasToc }]}>
 				<div class="prose">
 					<div class="title">
 						<div class="date">
@@ -80,6 +119,8 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 						<hr />
 					</div>
 					<slot />
+				</div>
+				{hasToc && <TableOfContents headings={headings} levels={tocLevels} />}
 				</div>
 			</article>
 		</main>

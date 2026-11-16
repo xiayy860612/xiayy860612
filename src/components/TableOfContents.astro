@@ -1,0 +1,221 @@
+---
+// 文章目录（TOC）：宽屏时悬浮在正文右侧（sticky），随滚动高亮当前章节；
+// 窄屏时收成右下角的「目录」按钮，点开后是一个浮层。标题的 id 由 Astro 的
+// markdown 渲染自动生成（rehype-slug），这里直接用 render() 返回的 headings。
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+	headings: MarkdownHeading[];
+	/** 目录收录几级标题，默认 2 级（h2、h3）；h1 是文章标题，不进目录 */
+	levels?: number;
+}
+
+const { headings, levels = 2 } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 1 + levels);
+---
+
+{
+	items.length > 0 && (
+		<aside class="toc" data-toc>
+			<button
+				type="button"
+				class="toc-toggle"
+				data-toc-toggle
+				aria-expanded="false"
+				aria-controls="toc-panel"
+			>
+				目录
+			</button>
+			<nav id="toc-panel" class="toc-panel" aria-label="文章目录" data-toc-panel>
+				<p class="toc-title">目录</p>
+				<ul>
+					{items.map((h) => (
+						<li style={`--indent: ${h.depth - 2}`}>
+							<a href={`#${h.slug}`} data-toc-link>
+								{h.text}
+							</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		</aside>
+	)
+}
+
+<style>
+	.toc {
+		position: relative;
+	}
+	.toc-toggle {
+		display: none;
+	}
+	.toc-panel {
+		position: sticky;
+		top: 1rem;
+		max-height: calc(100vh - 2rem);
+		overflow-y: auto;
+		padding: 0.9rem 0.6rem 0.9rem 1rem;
+		font-size: 0.85rem;
+		line-height: 1.45;
+		border-left: 2px solid rgb(var(--gray-light));
+		overscroll-behavior: contain;
+	}
+	.toc-title {
+		margin: 0 0 0.5rem;
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		color: rgb(var(--gray));
+	}
+	.toc-panel ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.toc-panel li {
+		margin: 0;
+		/* 第 N 级标题缩进 N-1 个台阶，级数多少都适用。 */
+		padding-left: calc(var(--indent, 0) * 0.9rem);
+	}
+	.toc-panel a {
+		display: block;
+		padding: 0.25rem 0.5rem;
+		margin-left: -0.5rem;
+		color: rgb(var(--gray-dark));
+		text-decoration: none;
+		border-radius: 6px;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease;
+	}
+	.toc-panel a:hover {
+		background: rgb(var(--gray-light));
+	}
+	.toc-panel a.active {
+		color: var(--accent-dark);
+		font-weight: 600;
+		background: rgba(35, 55, 255, 8%);
+	}
+
+	/* 窄屏：悬浮按钮 + 浮层 */
+	@media (max-width: 1100px) {
+		.toc {
+			position: static;
+		}
+		.toc-toggle {
+			position: fixed;
+			right: 1rem;
+			bottom: 1rem;
+			z-index: 20;
+			display: block;
+			padding: 0.55em 1.1em;
+			font: inherit;
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: #fff;
+			background: var(--accent);
+			border: none;
+			border-radius: 999px;
+			box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+			cursor: pointer;
+		}
+		.toc-panel {
+			position: fixed;
+			right: 1rem;
+			bottom: 4.2rem;
+			z-index: 20;
+			width: min(20rem, calc(100vw - 2rem));
+			max-height: 60vh;
+			background: #fff;
+			border: 1px solid rgb(var(--gray-light));
+			border-radius: 12px;
+			box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+			display: none;
+		}
+		.toc[data-open] .toc-panel {
+			display: block;
+		}
+	}
+</style>
+
+<style is:global>
+	/* 点目录跳转后，标题不要贴着视口顶边。 */
+	.prose :is(h2, h3, h4) {
+		scroll-margin-top: 1rem;
+	}
+	html {
+		scroll-behavior: smooth;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+	}
+</style>
+
+<script>
+	const toc = document.querySelector<HTMLElement>('[data-toc]');
+	if (toc) {
+		const links = [...toc.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+		const toggle = toc.querySelector<HTMLButtonElement>('[data-toc-toggle]');
+		const panel = toc.querySelector<HTMLElement>('[data-toc-panel]');
+
+		const idOf = (link: HTMLAnchorElement) => decodeURIComponent(link.hash.slice(1));
+		const targets = links
+			.map((link) => ({ link, el: document.getElementById(idOf(link)) }))
+			.filter((t): t is { link: HTMLAnchorElement; el: HTMLElement } => t.el !== null);
+
+		// 高亮：取「已经滚过视口上沿附近」的最后一个标题；还没滚到任何标题时高亮第一个。
+		// 点击目录项后，该项保持高亮，直到用户自己滚动（避免很短的章节被下一节抢走高亮）。
+		let pinned: (typeof targets)[number] | null = null;
+		const setActive = () => {
+			const line = window.innerHeight * 0.25;
+			let current = targets[0];
+			for (const t of targets) {
+				if (t.el.getBoundingClientRect().top <= line) current = t;
+				else break;
+			}
+			if (pinned) current = pinned;
+			for (const t of targets) t.link.classList.toggle('active', t === current);
+			// 目录本身也可滚动：保持高亮项在目录可视范围内。
+			const active = current?.link;
+			if (active && panel && panel.scrollHeight > panel.clientHeight) {
+				const a = active.getBoundingClientRect();
+				const p = panel.getBoundingClientRect();
+				if (a.top < p.top || a.bottom > p.bottom) active.scrollIntoView({ block: 'nearest' });
+			}
+		};
+		// 每次滚动只读十几个标题的位置，开销很小，不需要再节流。
+		window.addEventListener('scroll', setActive, { passive: true });
+		window.addEventListener('resize', setActive);
+		for (const type of ['wheel', 'touchstart', 'keydown'] as const) {
+			window.addEventListener(type, () => (pinned = null), { passive: true });
+		}
+		for (const t of targets) {
+			t.link.addEventListener('click', () => {
+				pinned = t;
+				setActive();
+			});
+		}
+		setActive();
+
+		// 窄屏浮层：按钮开关，点目录项 / 点外面 / Esc 关闭。
+		const setOpen = (open: boolean) => {
+			toc.toggleAttribute('data-open', open);
+			toggle?.setAttribute('aria-expanded', String(open));
+		};
+		toggle?.addEventListener('click', (event) => {
+			event.stopPropagation();
+			setOpen(!toc.hasAttribute('data-open'));
+		});
+		panel?.addEventListener('click', (event) => {
+			if ((event.target as Element).closest('a')) setOpen(false);
+		});
+		document.addEventListener('click', (event) => {
+			if (!toc.contains(event.target as Node)) setOpen(false);
+		});
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape') setOpen(false);
+		});
+	}
+</script>

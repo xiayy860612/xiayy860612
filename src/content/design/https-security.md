@@ -19,7 +19,7 @@ Https中的加密主要分为2块：
 
 ### 握手过程
 
-```text
+```plantuml
 participant Client as C
 participant Server as S
 participant CA
@@ -89,7 +89,7 @@ S --> C: 编码改变通知， 服务器握手结束通知
 - 证实一个实体的真实身份
 - 负责生成一个将身份和公钥绑定的证书，即CA Certificate
 
-```text
+```plantuml
 participant Owner as O
 participant User as U
 participant CA
