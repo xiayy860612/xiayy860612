@@ -1,11 +1,7 @@
 ---
-title: OIDC Design
-date: 2025-07-13 14:00:19
-categories:
-- system
-tags:
-- oidc
-- oauth2
+title: 'OIDC Design'
+description: 'OIDC 设计笔记：Endpoints、Token、授权码登录流程、客户端集成与 IDP 模型设计。'
+pubDate: '2025-07-13'
 ---
 
 ## Endpoints
@@ -16,8 +12,6 @@ tags:
 - JWKS endpoint(`/.well-known/jwks.json`), is used to verify jwt token, such like id token
 - user endpoint(`/me`), get lateset user info
 - end session endpoint(`/session/end`), is used to logout
-
-<!--more-->
 
 ## Token
 
@@ -86,7 +80,7 @@ to avoid requiring users to login frequently, refresh tokens are given a long ex
 
 ## authorize Workflow with authorization_code
 
-```plantuml
+```text
 
 actor User as U
 actor Client as C

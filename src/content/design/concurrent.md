@@ -1,15 +1,10 @@
 ---
-title: 并发设计模式
-date: 2025-11-27 20:00:00
-categories:
-- design
-tags:
-- concurrent
+title: '并发设计模式'
+description: '并发编程的各种设计模式：进程、线程、协程与常见的并发模式。'
+pubDate: '2025-11-27'
 ---
 
 快速学习并发编程的各种模式设计。
-
-<!--more-->
 
 并发的形式：
 
@@ -17,7 +12,7 @@ tags:
 - 多线程，充分利用单个节点上的多核 CPU
 - 多协程，用户态的轻量级线程，由程序控制调度（非操作系统内核调度），通常基于事件循环实现，切换开销极小。
 
-![并发方式](concurrent-strategy.png)
+![并发方式](./concurrent/concurrent-strategy.png)
 
 ## 并发的方式
 
@@ -32,7 +27,7 @@ tags:
 
 为了更好的利用**多核性能**，线程的实现一般通过和**内核级的线程/轻量级进程**进行一对一关联，通过内核中的进程调度器进行调度。
 
-![thread status flow](<thread status flow.png>)
+![thread status flow](./concurrent/thread-status-flow.png)
 
 - wait，当前线程**释放**实例对象的锁，状态变为等待并进入等待队列，其他线程获取锁然后执行相关操作。
 - sleep，当前线程**不会释放**实例对象的锁，其他想要获取锁的线程仍然被阻塞
@@ -91,7 +86,7 @@ Linux 为进程设计的两种运行级别，即用户态和内核态，进程�
 来限制**同一时间**只能让**一个线程**执行处理。
 一般通过**悲观锁**对不安全的方法设置临界区，使其同一时间只能被一个线程访问。
 
-```puml
+```text
 class SharedResource {
     state
     unsafeMethod() { guarded }
@@ -145,7 +140,7 @@ class SharedResource {
 
 Immutable 的实例被创建后，其状态就不再发生变化。
 
-```puml
+```text
 
 class ImmutableSharedResouce {
     field { frozen }
@@ -166,7 +161,7 @@ Mutable 实例用于构建 Immutable 实例，可被修改；
 Immutable 实例则用于共享。
 两者可以根据需求，互相转换。
 
-```puml
+```text
 
 class Immutable {
     constructor(Mutable obj) {}
@@ -185,7 +180,7 @@ Immutable <--> Mutable: 转换
 该模式通过让线程等待来保证共享资源的安全性，
 当**守护条件(guard condition)**不成立时，让线程等待，直到守护条件满足才能执行操作。
 
-![Guarded Suspension Pattern](<Guarded Suspension Pattern.png>)
+![Guarded Suspension Pattern](./concurrent/guarded-suspension-pattern.png)
 
 ```java
 synchronized void guardedMethod（） {
@@ -213,7 +208,7 @@ synchronized void stateChangingMethod() {
 
 该模式用于当**守护条件**不满足时，就停止处理，直接返回，而 `Guarded Suspension Pattern` 则是一直等待。
 
-![Balking Pattern](<Balking Pattern.png>)
+![Balking Pattern](./concurrent/balking-pattern.png)
 
 ```java
 synchronized void guardedMethod() {
@@ -261,7 +256,7 @@ synchronized void guardedMethod() throws InterruptedException, TimeoutException 
 
 通过阻塞队列来消除生产者和消费者之间的处理速度。
 
-![Producer-Consumer Pattern](<Producer-Consumer Pattern.png>)
+![Producer-Consumer Pattern](./concurrent/producer-consumer-pattern.png)
 
 Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传递 Data 角色的
 中转站、通道的任务，实现线程的协调运行。而传递 Data 的顺序的方式有:
@@ -278,9 +273,9 @@ Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传�
 一般来说,执行互斥处理会降低程序性能。但如果把针对写入的互斥处理和针对读取的互斥处
 理分开来考虑,则可以提高程序性能。
 
-![Read-Write Lock Pattern](<Read-Write Lock Pattern.png>)
+![Read-Write Lock Pattern](./concurrent/read-write-lock-pattern.png)
 
-![Read-Write Lock Flow](<Read-Write Lock Flow.png>)
+![Read-Write Lock Flow](./concurrent/read-write-lock-flow.png)
 
 适用场景：
 
@@ -291,18 +286,18 @@ Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传�
 
 该模式为每个请求新分配一个线程, 由这个线程来执行处理，并且最终不需要获取请求的结果。
 
-![Thread-Per-Message Pattern](<Thread-Per-Message Pattern.png>)
+![Thread-Per-Message Pattern](./concurrent/thread-per-message-pattern.png)
 
-![Thread-Per-Message Flow](<Thread-Per-Message Flow.png>)
+![Thread-Per-Message Flow](./concurrent/thread-per-message-flow.png)
 
 ### Worker Thread Pattern
 
 该模式为了不必要的线程创建的开销，对线程进行重用，工作线程会逐个取得任务，并对任务进行处理，
 在全部任务处理完毕后会等待新的任务。
 
-![Worker Thread Pattern](<Worker Thread Pattern.png>)
+![Worker Thread Pattern](./concurrent/worker-thread-pattern.png)
 
-![Worker Thread Flow](<Worker Thread Flow.png>)
+![Worker Thread Flow](./concurrent/worker-thread-flow.png)
 
 需要根据实际运行环境来调整 worker 的数量。
 
@@ -318,9 +313,9 @@ Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传�
 
 该模式为每个请求分配一个线程, 由这个线程来执行处理，并且最终需要获得请求处理的结果。
 
-![Future Pattern](<Future Pattern.png>)
+![Future Pattern](./concurrent/future-pattern.png)
 
-![Future Pattern Flow](<Future Pattern Flow.png>)
+![Future Pattern Flow](./concurrent/future-pattern-flow.png)
 
 ### Multiple-Phase Pattern
 
@@ -331,15 +326,15 @@ Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传�
 
 分两阶段(操作中 -> 终止中 -> 终止)优雅的终止线程。
 
-![Two-Phase Terminication Flow](<Two-Phase Terminication Flow.png>)
+![Two-Phase Terminication Flow](./concurrent/two-phase-terminication-flow.png)
 
-![Two-Phase Terminication Pattern](<Two-Phase Terminication Pattern.png>)
+![Two-Phase Terminication Pattern](./concurrent/two-phase-terminication-pattern.png)
 
 ### Thread-Local Pattern
 
 在**不破坏原有代码结构**的基础中，通过统一接口来获取当前线程的上下文数据，并且**没有显式的执行互斥操作**。
 
-![Thread-Local Pattern](<Thread-Local Pattern.png>)
+![Thread-Local Pattern](./concurrent/thread-local-pattern.png)
 
 上下文数据的存储有 2 种：
 
@@ -351,7 +346,7 @@ Channel 角色位于 Producer 角色和 Consumer 角色之间, 承担用于传�
 
 用于解决比较大粒度的耗时操作。
 
-![Actor Pattern](<Actor Pattern.png>)
+![Actor Pattern](./concurrent/actor-pattern.png)
 
 ## Reference
 

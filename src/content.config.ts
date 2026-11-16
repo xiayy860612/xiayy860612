@@ -52,4 +52,10 @@ const awsSaa = defineCollection({
 	}),
 });
 
-export const collections = { blog, ai, awsSaa };
+// 设计类文档（HTTPS、SOLID、OIDC、算法、并发模式等）：放在 src/content/design/，对应「设计」菜单（/design）。
+const design = defineCollection({
+	loader: glob({ base: './src/content/design', pattern: '**/*.md' }),
+	schema: postSchema,
+});
+
+export const collections = { blog, ai, design, awsSaa };
