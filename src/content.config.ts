@@ -2,19 +2,28 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
+// 文章类集合（blog、ai）共用的 frontmatter 校验。
+const postSchema = ({ image }: { image: () => z.ZodType }) =>
+	z.object({
+		title: z.string(),
+		description: z.string(),
+		// Transform string to Date object
+		pubDate: z.coerce.date(),
+		updatedDate: z.coerce.date().optional(),
+		heroImage: z.optional(image()),
+	});
+
 const blog = defineCollection({
 	// Load Markdown and MDX files in the `src/content/blog/` directory.
 	loader: glob({ base: './src/content/blog', pattern: '**/*.md' }),
 	// Type-check frontmatter using a schema
-	schema: ({ image }) =>
-		z.object({
-			title: z.string(),
-			description: z.string(),
-			// Transform string to Date object
-			pubDate: z.coerce.date(),
-			updatedDate: z.coerce.date().optional(),
-			heroImage: z.optional(image()),
-		}),
+	schema: postSchema,
+});
+
+// AI 相关文档：放在 src/content/AI/，对应站点的「AI」菜单（/ai）。
+const ai = defineCollection({
+	loader: glob({ base: './src/content/AI', pattern: '**/*.md' }),
+	schema: postSchema,
 });
 
 // AWS SAA 题库：由 tools/aws-saa-questions-scrape.js 抓取，每题一个 JSON 文件，
@@ -43,4 +52,4 @@ const awsSaa = defineCollection({
 	}),
 });
 
-export const collections = { blog, awsSaa };
+export const collections = { blog, ai, awsSaa };
