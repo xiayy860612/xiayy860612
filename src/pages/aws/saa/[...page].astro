@@ -6,9 +6,11 @@ import Footer from '../../../components/Footer.astro';
 import Header from '../../../components/Header.astro';
 import SaaQuestionCard from '../../../components/SaaQuestionCard.astro';
 import { SITE_TITLE } from '../../../consts';
+import { hrefFor } from '../../../lib/saa';
 
-// 一题一页：paginate 的 pageSize 设成 1，第 N 题就是第 N 页，
-// 上一题 / 下一题直接用 page.url.prev / page.url.next，无需客户端状态。
+// 一题一页：paginate 的 pageSize 设成 1，第 N 题就是第 N 页，保证 /aws/saa/N 深链接、
+// 刷新和无 JS 时都有完整的首屏。页面加载后由 scripts/saa-quiz.ts 接管：取题目清单，
+// 切题时只 fetch 对应题目的 JSON 原地更新，不再整页跳转。
 export const getStaticPaths = (async ({ paginate }) => {
 	const questions = (await getCollection('awsSaa')).sort((a, b) => a.data.index - b.data.index);
 	return paginate(questions, { pageSize: 1 });
@@ -20,6 +22,11 @@ const progress = Math.round((question.data.index / question.data.total) * 100);
 
 const title = 'AWS SAA';
 const description = 'AWS Certified Solutions Architect – Associate 题库，点击卡片查看答案';
+
+const prevIndex = question.data.index - 1;
+const nextIndex = question.data.index + 1;
+const hasPrev = prevIndex >= 1;
+const hasNext = nextIndex <= page.lastPage;
 ---
 
 <!doctype html>
@@ -41,50 +48,45 @@ const description = 'AWS Certified Solutions Architect – Associate 题库，�
 				<div
 					class="quiz-progress"
 					role="progressbar"
+					data-progress
 					aria-valuenow={question.data.index}
 					aria-valuemin="1"
 					aria-valuemax={question.data.total}
 					aria-label={`题目进度：第 ${question.data.index} / ${question.data.total} 题`}
 				>
 					<div class="quiz-progress-track">
-						<div class="quiz-progress-fill" style={`width: ${progress}%`}></div>
+						<div class="quiz-progress-fill" data-progress-fill style={`width: ${progress}%`}></div>
 					</div>
-					<span class="quiz-progress-label" aria-hidden="true">{progress}%</span>
+					<span class="quiz-progress-label" data-progress-label aria-hidden="true">{progress}%</span>
 				</div>
 			</div>
 
-			<SaaQuestionCard question={question} minHeight="22rem" />
+			<div data-card>
+				<SaaQuestionCard question={question} minHeight="22rem" />
+			</div>
 
 			<nav
 				class="pager"
 				aria-label="题目导航"
 				data-pager
-				data-prev={page.url.prev ?? ''}
-				data-next={page.url.next ?? ''}
+				data-current={question.data.index}
+				data-total={page.lastPage}
 			>
-				{
-					page.url.prev ? (
-						<a class="step" href={page.url.prev} rel="prev" data-dir="prev">
-							<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
-								<path
-									fill="currentColor"
-									d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0z"
-								/>
-							</svg>
-							<span>上一题</span>
-						</a>
-					) : (
-						<span class="step disabled">
-							<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
-								<path
-									fill="currentColor"
-									d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0z"
-								/>
-							</svg>
-							<span>上一题</span>
-						</span>
-					)
-				}
+				<a
+					class:list={['step', { disabled: !hasPrev }]}
+					href={hasPrev ? hrefFor(prevIndex) : undefined}
+					rel="prev"
+					data-dir="prev"
+					aria-disabled={hasPrev ? 'false' : 'true'}
+				>
+					<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
+						<path
+							fill="currentColor"
+							d="M9.78 3.22a.75.75 0 0 1 0 1.06L6.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0z"
+						/>
+					</svg>
+					<span>上一题</span>
+				</a>
 
 				<form class="jump" data-jump data-last={page.lastPage}>
 					<label class="sr-only" for="jump-input">
@@ -101,34 +103,26 @@ const description = 'AWS Certified Solutions Architect – Associate 题库，�
 							value={question.data.index}
 							inputmode="numeric"
 						/>
-						/ {page.lastPage} 题
+						/ <span data-last-label>{page.lastPage}</span> 题
 					</span>
 					<button type="submit">跳转</button>
 				</form>
 
-				{
-					page.url.next ? (
-						<a class="step" href={page.url.next} rel="next" data-dir="next">
-							<span>下一题</span>
-							<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
-								<path
-									fill="currentColor"
-									d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"
-								/>
-							</svg>
-						</a>
-					) : (
-						<span class="step disabled">
-							<span>下一题</span>
-							<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
-								<path
-									fill="currentColor"
-									d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"
-								/>
-							</svg>
-						</span>
-					)
-				}
+				<a
+					class:list={['step', { disabled: !hasNext }]}
+					href={hasNext ? hrefFor(nextIndex) : undefined}
+					rel="next"
+					data-dir="next"
+					aria-disabled={hasNext ? 'false' : 'true'}
+				>
+					<span>下一题</span>
+					<svg viewBox="0 0 16 16" aria-hidden="true" width="14" height="14">
+						<path
+							fill="currentColor"
+							d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06z"
+						/>
+					</svg>
+				</a>
 			</nav>
 		</main>
 		<Footer />
@@ -209,19 +203,20 @@ const description = 'AWS Certified Solutions Architect – Associate 题库，�
 			color 0.15s ease,
 			transform 0.15s ease;
 	}
-	a.step:hover {
+	a.step[href]:hover {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: #fff;
 		transform: translateY(-1px);
 	}
-	a.step:focus-visible {
+	a.step[href]:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
 	.step.disabled {
 		color: rgb(var(--gray));
 		opacity: 0.45;
+		cursor: default;
 	}
 	.jump {
 		display: flex;
@@ -286,13 +281,9 @@ const description = 'AWS Certified Solutions Architect – Associate 题库，�
 </style>
 
 <style is:global>
-	/* 题目之间翻页时用跨文档 View Transitions 做一个轻量的滑入滑出效果；
-	   不支持的浏览器会自动退化成普通的整页跳转，属于渐进增强。 */
+	/* 切题时用同文档 View Transitions 做一个轻量的滑入滑出；方向由 saa-quiz.ts
+	   写到 <html data-saa-dir>。不支持的浏览器直接原地更新，属于渐进增强。 */
 	@media (prefers-reduced-motion: no-preference) {
-		@view-transition {
-			navigation: auto;
-		}
-
 		@keyframes saa-slide-out-left {
 			to {
 				transform: translateX(-4%);
@@ -318,87 +309,21 @@ const description = 'AWS Certified Solutions Architect – Associate 题库，�
 			}
 		}
 
-		html:active-view-transition-type(next)::view-transition-old(root) {
+		html[data-saa-dir='next']::view-transition-old(root) {
 			animation: 160ms ease-in both saa-slide-out-left;
 		}
-		html:active-view-transition-type(next)::view-transition-new(root) {
+		html[data-saa-dir='next']::view-transition-new(root) {
 			animation: 220ms ease-out both saa-slide-in-right;
 		}
-		html:active-view-transition-type(prev)::view-transition-old(root) {
+		html[data-saa-dir='prev']::view-transition-old(root) {
 			animation: 160ms ease-in both saa-slide-out-right;
 		}
-		html:active-view-transition-type(prev)::view-transition-new(root) {
+		html[data-saa-dir='prev']::view-transition-new(root) {
 			animation: 220ms ease-out both saa-slide-in-left;
 		}
 	}
 </style>
 
 <script>
-	const pager = document.querySelector<HTMLElement>('[data-pager]');
-	const jump = document.querySelector<HTMLFormElement>('[data-jump]');
-
-	const hrefFor = (index: number) => (index === 1 ? '/aws/saa' : `/aws/saa/${index}`);
-
-	// 记下本次导航的方向，加载到下一页时据此选一个滑入/滑出动画（见下面的 pagereveal）。
-	// 只支持 View Transitions 的浏览器才会用到；其它浏览器忽略这个值也没关系。
-	const DIRECTION_KEY = 'saa-vt-direction';
-	const rememberDirection = (direction: 'next' | 'prev') => {
-		try {
-			sessionStorage.setItem(DIRECTION_KEY, direction);
-		} catch {
-			/* 隐私模式下 sessionStorage 可能不可用，忽略即可，退化成无方向的默认过渡。 */
-		}
-	};
-
-	pager?.querySelectorAll<HTMLAnchorElement>('a.step[data-dir]').forEach((link) => {
-		link.addEventListener('click', () => {
-			const dir = link.dataset.dir;
-			if (dir === 'next' || dir === 'prev') rememberDirection(dir);
-		});
-	});
-
-	jump?.addEventListener('submit', (event) => {
-		event.preventDefault();
-		const input = jump.elements.namedItem('index') as HTMLInputElement;
-		const last = Number(jump.dataset.last);
-		const index = Number(input.value);
-		if (!Number.isInteger(index) || index < 1 || index > last) {
-			input.reportValidity();
-			return;
-		}
-		location.href = hrefFor(index);
-	});
-
-	document.addEventListener('keydown', (event) => {
-		if (event.metaKey || event.ctrlKey || event.altKey) return;
-		// 正在题号输入框里按方向键调数字时不要翻页。
-		const target = event.target;
-		if (target instanceof Element && target.closest('input, textarea, select')) return;
-
-		if (event.key === 'ArrowLeft' && pager?.dataset.prev) {
-			rememberDirection('prev');
-			location.href = pager.dataset.prev;
-		} else if (event.key === 'ArrowRight' && pager?.dataset.next) {
-			rememberDirection('next');
-			location.href = pager.dataset.next;
-		}
-	});
-
-	// 跨文档 View Transitions：加载到新页面时，把上面记下的方向翻译成
-	// CSS 里 `:active-view-transition-type()` 认识的过渡类型。
-	if ('onpagereveal' in window) {
-		window.addEventListener('pagereveal', (event: any) => {
-			if (!event.viewTransition) return;
-			let direction: string | null = null;
-			try {
-				direction = sessionStorage.getItem(DIRECTION_KEY);
-				sessionStorage.removeItem(DIRECTION_KEY);
-			} catch {
-				/* 忽略：读不到就用默认过渡。 */
-			}
-			if (direction === 'next' || direction === 'prev') {
-				event.viewTransition.types.add(direction);
-			}
-		});
-	}
+	import '../../../scripts/saa-quiz';
 </script>
