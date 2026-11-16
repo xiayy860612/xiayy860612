@@ -75,6 +75,8 @@ if (pager && jump && frontBody && backBody && flipInput && jumpInput && prevLink
 		frontBody.innerHTML = renderFront(question);
 		backBody.innerHTML = renderBack(question);
 		flipInput.checked = false; // 新题回到正面
+		frontBody.scrollTop = 0; // 卡片高度固定、内容可滚动，换题后回到顶部
+		backBody.scrollTop = 0;
 
 		const percent = Math.round((question.index / question.total) * 100);
 		progressFill && (progressFill.style.width = `${percent}%`);
@@ -104,7 +106,10 @@ if (pager && jump && frontBody && backBody && flipInput && jumpInput && prevLink
 		try {
 			const question = await load(index);
 			if (mine !== token) return;
+			let applied = false;
 			const apply = () => {
+				if (applied) return;
+				applied = true;
 				render(question);
 				if (push) history.pushState({ index }, '', hrefFor(index));
 			};
@@ -113,6 +118,8 @@ if (pager && jump && frontBody && backBody && flipInput && jumpInput && prevLink
 				root.dataset.saaDir = direction;
 				const transition = document.startViewTransition(apply);
 				transition.finished.finally(() => delete root.dataset.saaDir);
+				// 页面不出帧（如标签页/窗格被隐藏）时过渡回调不会执行，超时后直接更新。
+				setTimeout(apply, 400);
 			} else {
 				apply();
 			}

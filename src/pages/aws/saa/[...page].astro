@@ -45,6 +45,10 @@ const hasNext = nextIndex <= page.lastPage;
 				<p class="intro">
 					点击卡片任意位置翻面查看正确答案与解析，也可以用键盘 <kbd>←</kbd> <kbd>→</kbd> 切换题目。
 				</p>
+			</div>
+
+			<!-- 切题时进度条、卡片、分页器会就地更新；其中只有卡片参与滑入滑出动画。 -->
+			<div class="quiz-body">
 				<div
 					class="quiz-progress"
 					role="progressbar"
@@ -59,10 +63,9 @@ const hasNext = nextIndex <= page.lastPage;
 					</div>
 					<span class="quiz-progress-label" data-progress-label aria-hidden="true">{progress}%</span>
 				</div>
-			</div>
 
-			<div data-card>
-				<SaaQuestionCard question={question} minHeight="22rem" />
+				<div class="quiz-card" data-card>
+				<SaaQuestionCard question={question} height="30rem" />
 			</div>
 
 			<nav
@@ -123,7 +126,8 @@ const hasNext = nextIndex <= page.lastPage;
 						/>
 					</svg>
 				</a>
-			</nav>
+				</nav>
+			</div>
 		</main>
 		<Footer />
 	</body>
@@ -133,7 +137,7 @@ const hasNext = nextIndex <= page.lastPage;
 	main {
 		width: 820px;
 	}
-	.quiz-head {
+	.quiz-progress {
 		margin-bottom: 1.75rem;
 	}
 	.intro {
@@ -309,16 +313,26 @@ const hasNext = nextIndex <= page.lastPage;
 			}
 		}
 
-		html[data-saa-dir='next']::view-transition-old(root) {
+		/* 只让题目卡片参与动画；根节点（导航、标题、页脚）以及进度条、分页器
+		   只更新数值，保持原样不动。 */
+		.quiz-card {
+			view-transition-name: saa-main;
+		}
+		html[data-saa-dir]::view-transition-old(root),
+		html[data-saa-dir]::view-transition-new(root) {
+			animation: none;
+			mix-blend-mode: normal;
+		}
+		html[data-saa-dir='next']::view-transition-old(saa-main) {
 			animation: 160ms ease-in both saa-slide-out-left;
 		}
-		html[data-saa-dir='next']::view-transition-new(root) {
+		html[data-saa-dir='next']::view-transition-new(saa-main) {
 			animation: 220ms ease-out both saa-slide-in-right;
 		}
-		html[data-saa-dir='prev']::view-transition-old(root) {
+		html[data-saa-dir='prev']::view-transition-old(saa-main) {
 			animation: 160ms ease-in both saa-slide-out-right;
 		}
-		html[data-saa-dir='prev']::view-transition-new(root) {
+		html[data-saa-dir='prev']::view-transition-new(saa-main) {
 			animation: 220ms ease-out both saa-slide-in-left;
 		}
 	}
