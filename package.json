@@ -7,7 +7,10 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "plantuml:setup": "node tools/plantuml-setup.mjs",
+    "predev": "npm run plantuml:setup",
     "dev": "astro dev",
+    "prebuild": "npm run plantuml:setup",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

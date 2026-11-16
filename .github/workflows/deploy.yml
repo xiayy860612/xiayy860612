@@ -23,6 +23,15 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v7
+      # 构建时用 PlantUML 把文章里的 puml 代码块渲染成图（见 src/plugins/satteri-plantuml.mjs）：
+      # 需要 Java；Graphviz 和中文字体用来保证布局和中文宽度正确。
+      - name: Set up Java for PlantUML
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Graphviz and CJK fonts
+        run: sudo apt-get update && sudo apt-get install -y graphviz fonts-noto-cjk
       - name: Install, build, and upload your site
         uses: withastro/action@v6
 

@@ -1,17 +1,10 @@
 ---
-title: Prompt 实践指南
-date: 2025-11-08 14:00:00
-categories:
-- ai
-tags:
-- ai
-- prompt
-- llm
+title: 'Prompt 实践指南'
+description: 'Prompt 编写的核心原则与常用模式：角色、Few-shot、思维链、模板、ReAct 等。'
+pubDate: '2025-11-08'
 ---
 
 Prompt（提示词）是一门同 LLM（大语言模型）进行沟通的语言，通过它才能让 LLM 知道应该去**做什么**以及**怎么去做**。
-
-<!--more-->
 
 LLM 擅长处理以下任务：
 
@@ -340,11 +333,11 @@ LLM 的局限性：
 
 借鉴项目管理中的SMART原则，一个好的提示词也应该遵循这些原则。
 
-![SMART](SMART.png)
+![SMART](./prompt-practice-guide/smart.png)
 
 好的提示词不是一次就得到的，而是根据场景不断迭代后得到的，从简单到复杂。
 
-![不断迭代优化](iterative.png)
+![不断迭代优化](./prompt-practice-guide/iterative.png)
 
 下面这些模式可以帮助我们完善步骤，并提高用户体验。
 

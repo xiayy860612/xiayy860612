@@ -1,16 +1,10 @@
 ---
-title: LLM and Transformer
-date: 2025-11-16 14:00:00
-categories:
-- ai
-tags:
-- ai
-- LLM
+title: 'LLM and Transformer'
+description: 'LLM 是基于 Transformer 通用模型架构进行构建的语言模型：模型类型、Transformer 架构、处理流程、批处理与微调。'
+pubDate: '2025-11-16'
 ---
 
 LLM 是基于 Transformer 通用模型架构进行构建的语言模型。
-
-<!--more-->
 
 ## 模型类型
 
@@ -20,7 +14,7 @@ LLM 是基于 Transformer 通用模型架构进行构建的语言模型。
   - 指令模型
 - 专用模型，针对特定领域，使用**特定数据集**通过迁移学习（transfer learning）训练的模型
 
-```puml
+```plantuml
 object "基础模型" as BM {
     随机初始化权重
     ---
@@ -51,7 +45,7 @@ Transformer 通用模型架构有以下部分组成:
 - Encoder：编码器接收输入并构建其**表示（特征）**。这意味着模型的使命是从输入中获取理解。
 - Decoder：解码器使用编码器的表示（特征）以及其他输入来生成目标序列。这意味着模型的使命是生成输出。
 
-![Transformer 架构](<Transformer 架构.png>)
+![Transformer 架构](./llm-and-transformer/transformer-architecture.png)
 
 根据要处理的任务的不同，其模型的组成也不同，又分为几种模型：
 
@@ -59,7 +53,7 @@ Transformer 通用模型架构有以下部分组成:
 - Decoder-only 模型：适用于生成任务，如文本生成。
 - Encoder-decoder 模型 或者 sequence-to-sequence 模型：适用于需要根据输入进行生成的任务，如翻译或摘要。
 
-![Transformer example](<Transformer example.png>)
+![Transformer example](./llm-and-transformer/transformer-example.png)
 
 实现更好性能的模型的一般策略是增加模型的大小以及预训练的数据量。
 
@@ -76,7 +70,7 @@ Transformer 提供一个统一的接口 `pipeline()` 来加载、训练和保存
 
 pipeline 集成了三个步骤：**预处理、模型计算和后处理**。
 
-![pipeline flow](<pipeline flow.png>)
+![pipeline flow](./llm-and-transformer/pipeline-flow.png)
 
 ### 使用 tokenizer 进行预处理
 
@@ -141,7 +135,7 @@ tokenization 分词的目标:
 
 ### 使用模型进行计算
 
-![model process flow](model-process-flow.png)
+![model process flow](./llm-and-transformer/model-process-flow.png)
 
 模型由其**嵌入层和后续层**表示，后续层即神经网络层。
 嵌入层将 tokenize 后输入中的每个 inputs ID 转换为表示关联 token 的向量。
@@ -166,29 +160,29 @@ Transformers 的模型头都是围绕处理特定任务而设计的，所以必�
 
 常见任务类型的模型的模型头后缀如下：
 
-- *Model （隐状态检索），生成每层 hidden states，不产生 logits
+- \*Model （隐状态检索），生成每层 hidden states，不产生 logits
   - 拿 hidden states 做下游任务
   - 构造自己的模型头
   - 表示学习（sentence embedding / token embedding）
   - 分析注意力、内部激活
-- *ForCausalLM，自回归语言模型（下一个 token 预测）
+- \*ForCausalLM，自回归语言模型（下一个 token 预测）
   - GPT 风格模型
   - 文本生成、续写
   - 对话模型
   - 代码生成
-- *ForMaskedLM，填空式语言模型
+- \*ForMaskedLM，填空式语言模型
   - 预测被掩码的 token
   - 词义建模
-- *ForMultipleChoice，选项类任务
+- \*ForMultipleChoice，选项类任务
   - CommonsenseQA, Social IQA
   - 阅读理解的多选题
   - 逻辑推理题
-- *ForQuestionAnswering，抽取式问答（span extraction）
-- *ForSequenceClassification，整个句子级别分类
+- \*ForQuestionAnswering，抽取式问答（span extraction）
+- \*ForSequenceClassification，整个句子级别分类
   - 文本情感分类（positive/negative）
   - 新闻分类
   - NLI（文本蕴含）
-- *ForTokenClassification，逐 token 分类
+- \*ForTokenClassification，逐 token 分类
   - 命名实体识别（NER）
   - 词性标注（POS tagging）
   - 医疗实体识别

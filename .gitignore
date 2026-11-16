@@ -28,3 +28,5 @@ pnpm-debug.log*
 .idea/
 
 tmp/
+# PlantUML jar（由 tools/plantuml-setup.mjs 下载，不提交）
+tools/plantuml/
