@@ -30,7 +30,7 @@ const ai = defineCollection({
 // 文件名即题号（1.json ~ 1018.json）。原始 JSON 用中文键名，这里在 schema 里
 // 统一转成英文字段，页面组件就不用写 data.answer['正确答案'] 这种取值了。
 const awsSaa = defineCollection({
-	loader: glob({ base: './src/content/aws/saa', pattern: '**/*.json' }),
+	loader: glob({ base: './src/content/cert/saa', pattern: '**/*.json' }),
 	schema: z.object({
 		qid: z.string().optional(),
 		index: z.number(),
